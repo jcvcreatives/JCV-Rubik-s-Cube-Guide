@@ -279,6 +279,64 @@
       border-radius: 8px;
       background: #141413;
     }
+    .case-grid-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .visual-case-card {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.15s ease;
+    }
+    .visual-case-card:hover {
+      border-color: var(--ink);
+    }
+    .visual-case-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .visual-case-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+    .yellow-case-badge {
+      width: 100%;
+      background: #F6D31B;
+      color: #141413;
+      border: 1px solid rgba(20, 20, 19, 0.2);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-family: 'Work Sans', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      text-align: center;
+    }
+    .yellow-alg-bar {
+      width: 100%;
+      background: #F6D31B;
+      color: #141413;
+      border: 1px solid rgba(20, 20, 19, 0.2);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-family: 'Work Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -341,6 +399,16 @@
           <button id="openCamFromGuideBtn" style="flex:1">Camera (Optional)</button>
         </div>
         <div class="strip" id="presetStrip"></div>
+      </div>
+
+      <div class="card" id="visualCaseGuideCard">
+        <div>
+          <h2>Visual Algorithm &amp; Case Guide (OLL / PLL)</h2>
+          <p class="muted">Match your top layer pattern to the 2D diagram below (yellow = oriented sticker, gray = unoriented, outer bars = side stickers). Tap any card to load it onto the 3D cube.</p>
+        </div>
+        <div id="caseCategoryStrip" class="strip"></div>
+        <span class="mono muted">Notation tip: lowercase 'r' = turn the Right two layers together (wide R).</span>
+        <div id="visualCaseList" class="case-grid-list"></div>
       </div>
 
       <div class="card">
@@ -704,6 +772,278 @@
       };
       simStrip.appendChild(b);
     });
+
+    const VISUAL_CASES = [
+      {
+        id: 'oll_8',
+        badge: 'OLL 8',
+        subtitle: 'Small Lightning Bolt · Wide Sune',
+        cat: 'OLL',
+        alg: "r' U' R U' R' U2' r",
+        seq: "L' U2 R U R' U L",
+        u: [1, 0, 0, 1, 1, 0, 0, 1, 0],
+        t: [0, 1, 1],
+        b: [1, 0, 0],
+        l: [0, 0, 0],
+        r: [0, 1, 1]
+      },
+      {
+        id: 'oll_25',
+        badge: 'OLL 25',
+        subtitle: 'Bowtie · Diagonal Corner Twist',
+        cat: 'OLL',
+        alg: "F' r U R' U' r' F R",
+        seq: "R' F' L F R F' L' F",
+        u: [0, 1, 1, 1, 1, 1, 1, 1, 0],
+        t: [0, 0, 0],
+        b: [0, 0, 1],
+        l: [1, 0, 0],
+        r: [0, 0, 0]
+      },
+      {
+        id: 'oll_27',
+        badge: 'OLL 27',
+        subtitle: 'Sune · 3-Corner Cycle',
+        cat: '2-Look',
+        alg: "R U R' U R U2' R'",
+        seq: "R U2 R' U' R U' R'",
+        u: [0, 1, 0, 1, 1, 1, 1, 1, 0],
+        t: [0, 0, 1],
+        b: [0, 0, 1],
+        l: [1, 0, 0],
+        r: [0, 0, 0]
+      },
+      {
+        id: 'oll_26',
+        badge: 'OLL 26',
+        subtitle: 'Anti-Sune · Reverse 3-Corner',
+        cat: '2-Look',
+        alg: "R U2 R' U' R U' R'",
+        seq: "R U R' U R U2 R'",
+        u: [0, 1, 1, 1, 1, 1, 0, 1, 0],
+        t: [1, 0, 0],
+        b: [1, 0, 0],
+        l: [0, 0, 0],
+        r: [0, 0, 1]
+      },
+      {
+        id: 'oll_21',
+        badge: 'OLL 21',
+        subtitle: 'H-Case · Double Headlights',
+        cat: '2-Look',
+        alg: "F R U R' U' R U R' U' F'",
+        seq: "F U R U' R' U R U' R' F'",
+        u: [0, 1, 0, 1, 1, 1, 0, 1, 0],
+        t: [1, 0, 1],
+        b: [1, 0, 1],
+        l: [0, 0, 0],
+        r: [0, 0, 0]
+      },
+      {
+        id: 'oll_24',
+        badge: 'OLL 24',
+        subtitle: 'Chameleon · Sledgehammer',
+        cat: 'OLL',
+        alg: "r U R' U' r' F R F'",
+        seq: "F R' F' L F R F' L'",
+        u: [0, 1, 1, 1, 1, 1, 0, 1, 1],
+        t: [1, 0, 0],
+        b: [1, 0, 0],
+        l: [0, 0, 0],
+        r: [0, 0, 0]
+      },
+      {
+        id: 'oll_45',
+        badge: 'OLL 45',
+        subtitle: 'T-Shape · Line to Cross',
+        cat: '2-Look',
+        alg: "F R U R' U' F'",
+        seq: "F U R U' R' F'",
+        u: [0, 0, 1, 1, 1, 1, 0, 0, 1],
+        t: [0, 1, 0],
+        b: [0, 1, 0],
+        l: [1, 0, 1],
+        r: [0, 0, 0]
+      },
+      {
+        id: 'pll_t',
+        badge: 'T Perm',
+        subtitle: 'PLL · Swap 2 Corners & 2 Edges',
+        cat: 'PLL',
+        alg: "R U R' U' R' F R2 U' R' U' R U R' F'",
+        seq: "F R U' R' U R U R2 F' R U R U' R'",
+        u: [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        t: [4, 4, 3],
+        b: [2, 2, 5],
+        l: [5, 3, 5],
+        r: [4, 5, 2]
+      },
+      {
+        id: 'pll_ua',
+        badge: 'Ua Perm',
+        subtitle: 'PLL · 3-Edge Cycle',
+        cat: 'PLL',
+        alg: "R U' R U R U R U' R' U' R2",
+        seq: "R2 U R U R' U' R' U' R' U R'",
+        u: [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        t: [4, 4, 4],
+        b: [2, 5, 2],
+        l: [5, 3, 5],
+        r: [3, 2, 3]
+      }
+    ];
+
+    function codeToDiagramHex(c) {
+      if (c === 1) return '#FCEC1A';
+      if (c === 2) return '#268E57';
+      if (c === 3) return '#D63828';
+      if (c === 4) return '#245EE0';
+      if (c === 5) return '#E67822';
+      return '#707070';
+    }
+
+    function drawTopDownDiagram(cvs, item) {
+      const dpr = window.devicePixelRatio || 1;
+      const sz = 128;
+      cvs.width = sz * dpr;
+      cvs.height = sz * dpr;
+      cvs.style.width = sz + 'px';
+      cvs.style.height = sz + 'px';
+      const c = cvs.getContext('2d');
+      c.scale(dpr, dpr);
+
+      const strokeW = 2.2;
+      const gap = 2.3;
+      const barThick = 11.2;
+      const coreMargin = barThick + gap * 1.4;
+      const coreSize = sz - coreMargin * 2;
+      const cell = (coreSize - gap * 2) / 3;
+      const innerR = cell * 0.30;
+      const outerR = cell * 0.11;
+      const barR = barThick * 0.36;
+
+      function rrPath(x, y, w, h, tl, tr, br, bl) {
+        c.beginPath();
+        c.moveTo(x + tl, y);
+        c.lineTo(x + w - tr, y);
+        c.quadraticCurveTo(x + w, y, x + w, y + tr);
+        c.lineTo(x + w, y + h - br);
+        c.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+        c.lineTo(x + bl, y + h);
+        c.quadraticCurveTo(x, y + h, x, y + h - bl);
+        c.lineTo(x, y + tl);
+        c.quadraticCurveTo(x, y, x + tl, y);
+        c.closePath();
+      }
+
+      c.fillStyle = '#0E0E0D';
+      rrPath(coreMargin - 1, coreMargin - 1, coreSize + 2, coreSize + 2, outerR, outerR, outerR, outerR);
+      c.fill();
+
+      for (let r = 0; r < 3; r++) {
+        for (let col = 0; col < 3; col++) {
+          const x = coreMargin + col * (cell + gap);
+          const y = coreMargin + r * (cell + gap);
+          const tl = (r >= 1 && col >= 1) ? innerR : outerR;
+          const tr = (r >= 1 && col <= 1) ? innerR : outerR;
+          const br = (r <= 1 && col <= 1) ? innerR : outerR;
+          const bl = (r <= 1 && col >= 1) ? innerR : outerR;
+          rrPath(x, y, cell, cell, tl, tr, br, bl);
+          c.fillStyle = codeToDiagramHex(item.u[r * 3 + col]);
+          c.fill();
+          c.lineWidth = strokeW;
+          c.strokeStyle = '#0E0E0D';
+          c.stroke();
+        }
+      }
+
+      for (let col = 0; col < 3; col++) {
+        const x = coreMargin + col * (cell + gap);
+        rrPath(x, coreMargin - gap - barThick, cell, barThick, barR, barR, barR, barR);
+        c.fillStyle = codeToDiagramHex(item.t[col]);
+        c.fill();
+        c.lineWidth = strokeW;
+        c.strokeStyle = '#0E0E0D';
+        c.stroke();
+
+        rrPath(x, coreMargin + coreSize + gap, cell, barThick, barR, barR, barR, barR);
+        c.fillStyle = codeToDiagramHex(item.b[col]);
+        c.fill();
+        c.lineWidth = strokeW;
+        c.strokeStyle = '#0E0E0D';
+        c.stroke();
+      }
+
+      for (let r = 0; r < 3; r++) {
+        const y = coreMargin + r * (cell + gap);
+        rrPath(coreMargin - gap - barThick, y, barThick, cell, barR, barR, barR, barR);
+        c.fillStyle = codeToDiagramHex(item.l[r]);
+        c.fill();
+        c.lineWidth = strokeW;
+        c.strokeStyle = '#0E0E0D';
+        c.stroke();
+
+        rrPath(coreMargin + coreSize + gap, y, barThick, cell, barR, barR, barR, barR);
+        c.fillStyle = codeToDiagramHex(item.r[r]);
+        c.fill();
+        c.lineWidth = strokeW;
+        c.strokeStyle = '#0E0E0D';
+        c.stroke();
+      }
+    }
+
+    let activeCaseCategory = 'All';
+    function renderVisualCases() {
+      const catStrip = document.getElementById('caseCategoryStrip');
+      catStrip.innerHTML = '';
+      ['All', 'OLL', '2-Look', 'PLL'].forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'chip' + (activeCaseCategory === cat ? ' active' : '');
+        btn.textContent = cat === 'All' ? 'All Cases' : cat === 'OLL' ? 'OLL (Orientation)' : cat === '2-Look' ? '2-Look Beginner' : 'PLL (Permutation)';
+        btn.onclick = () => { activeCaseCategory = cat; renderVisualCases(); };
+        catStrip.appendChild(btn);
+      });
+
+      const listEl = document.getElementById('visualCaseList');
+      listEl.innerHTML = '';
+      const filtered = activeCaseCategory === 'All' ? VISUAL_CASES : VISUAL_CASES.filter(c => c.cat === activeCaseCategory);
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'visual-case-card';
+        card.onclick = () => {
+          scrambleHistory = item.seq.split(' ').map(t => MOVE_MAP[t]);
+          cubeState = solvedCube();
+          scrambleHistory.forEach(m => { cubeState = applyMove(cubeState, m); });
+          document.getElementById('scrambleNameLabel').textContent = `${item.badge} · ${item.subtitle}`;
+          recomputeSolution();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const topRow = document.createElement('div');
+        topRow.className = 'visual-case-top';
+        const cvs = document.createElement('canvas');
+        drawTopDownDiagram(cvs, item);
+        topRow.appendChild(cvs);
+
+        const rightCol = document.createElement('div');
+        rightCol.className = 'visual-case-right';
+        rightCol.innerHTML = `
+          <div class="yellow-case-badge">${item.badge}</div>
+          <span class="muted">${item.subtitle}</span>
+          <span class="mono" style="font-size:11.5px;">Tap to load on 3D Cube →</span>
+        `;
+        topRow.appendChild(rightCol);
+
+        const algBar = document.createElement('div');
+        algBar.className = 'yellow-alg-bar';
+        algBar.textContent = item.alg;
+
+        card.appendChild(topRow);
+        card.appendChild(algBar);
+        listEl.appendChild(card);
+      });
+    }
+    renderVisualCases();
 
     document.getElementById('prevBtn').onclick = () => { if (currentStepIndex > 0) { currentStepIndex--; renderGuideUI(); } };
     document.getElementById('nextBtn').onclick = () => { if (currentStepIndex < solveSteps.length) { currentStepIndex++; renderGuideUI(); } };

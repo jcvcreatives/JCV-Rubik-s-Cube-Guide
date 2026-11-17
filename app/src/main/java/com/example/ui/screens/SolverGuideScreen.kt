@@ -71,6 +71,7 @@ import com.example.domain.PresetScramble
 import com.example.model.CubeColor
 import com.example.model.SolveStep
 import com.example.ui.components.Cube3DCanvas
+import com.example.ui.components.VisualCaseGuideSection
 import com.example.viewmodel.CubeSolverUiState
 import java.util.concurrent.Executors
 
@@ -340,6 +341,10 @@ fun SolverGuideScreen(
                 onOpenOptionalCamera = onOpenOptionalCamera,
                 onGenerateNewScramble = onGenerateNewScramble,
                 onLoadPresetScramble = onLoadPresetScramble
+            )
+
+            VisualCaseGuideSection(
+                onLoadCaseOnCube = onLoadPresetScramble
             )
 
             CompleteSolvingInstructionsDeck()
