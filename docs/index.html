@@ -337,6 +337,82 @@
       letter-spacing: 0.02em;
       text-align: center;
     }
+    .beginner-key-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .key-rule-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+    }
+    .key-rule-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .key-entry-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .key-entry-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .key-token-pill {
+      min-width: 62px;
+      background: #F6D31B;
+      color: #141413;
+      border: 1px solid rgba(20, 20, 19, 0.2);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .alg-breakdown-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .alg-step-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .alg-step-chip {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .alg-step-chip strong {
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--ink);
+    }
   </style>
 </head>
 <body>
@@ -404,10 +480,30 @@
       <div class="card" id="visualCaseGuideCard">
         <div>
           <h2>Visual Algorithm &amp; Case Guide (OLL / PLL)</h2>
-          <p class="muted">Match your top layer pattern to the 2D diagram below (yellow = oriented sticker, gray = unoriented, outer bars = side stickers). Tap any card to load it onto the 3D cube.</p>
+          <p class="muted">Match your top layer pattern to the 2D diagram below (yellow = oriented sticker, gray = unoriented, outer bars = side stickers). Each card translates every letter into plain English for beginners.</p>
         </div>
+
+        <div class="beginner-key-box">
+          <div class="row-between">
+            <div>
+              <strong style="font-size:15px;">Beginner Key: What do r, R, U', U2' mean?</strong>
+              <p class="muted" style="font-size:12.5px;">Capital = 1 outer layer · Lowercase (r, f) = 2 layers together · ' = reverse · 2 = turn twice</p>
+            </div>
+            <button id="toggleKeyBtn" style="padding:6px 10px;font-size:12px;">Hide Key</button>
+          </div>
+          <div id="beginnerKeyContent" style="display:flex;flex-direction:column;gap:10px;">
+            <div class="key-rule-strip">
+              <div class="key-rule-card"><strong class="mono">R  U  F  L  D</strong><span style="font-size:12.5px;font-weight:500;">Capital Letter</span><span class="muted" style="font-size:12px;">Turn 1 outer layer (90°)</span></div>
+              <div class="key-rule-card"><strong class="mono">r  f  l  u  d</strong><span style="font-size:12.5px;font-weight:500;">Lowercase Letter</span><span class="muted" style="font-size:12px;">Grab 2 layers together (Wide)</span></div>
+              <div class="key-rule-card"><strong class="mono">' (Prime)</strong><span style="font-size:12.5px;font-weight:500;">Apostrophe '</span><span class="muted" style="font-size:12px;">Reverse / Counter-Clockwise</span></div>
+              <div class="key-rule-card"><strong class="mono">2  or  2'</strong><span style="font-size:12.5px;font-weight:500;">Number 2</span><span class="muted" style="font-size:12px;">Turn twice (180° half-turn)</span></div>
+            </div>
+            <hr />
+            <div id="beginnerKeyEntries" class="key-entry-list"></div>
+          </div>
+        </div>
+
         <div id="caseCategoryStrip" class="strip"></div>
-        <span class="mono muted">Notation tip: lowercase 'r' = turn the Right two layers together (wide R).</span>
         <div id="visualCaseList" class="case-grid-list"></div>
       </div>
 
@@ -416,9 +512,10 @@
         <p class="muted">Hold your cube with the GREEN center in front (F) and WHITE center on top (U). Keep this orientation fixed for every move—only twist the indicated outer layer.</p>
         <hr />
         <div style="display:flex;flex-direction:column;gap:6px;">
-          <div class="row-between"><span class="mono">U D R L F B</span><span class="muted">90° clockwise turn looking at that face</span></div>
-          <div class="row-between"><span class="mono">U' D' R' L' F' B'</span><span class="muted">90° counter-clockwise (prime) turn</span></div>
-          <div class="row-between"><span class="mono">U2 D2 R2 L2 F2 B2</span><span class="muted">180° half-turn in either direction</span></div>
+          <div class="row-between"><span class="mono">R L U D F B</span><span class="muted">Capital = Turn 1 outer layer 90° clockwise</span></div>
+          <div class="row-between"><span class="mono">r l u d f b</span><span class="muted">Lowercase = Wide turn (grab 2 layers together)</span></div>
+          <div class="row-between"><span class="mono">R' r' U' F'</span><span class="muted">Apostrophe (') = Reverse / counter-clockwise (90°)</span></div>
+          <div class="row-between"><span class="mono">U2 U2' R2</span><span class="muted">2 or 2' = Turn twice (180° half-turn)</span></div>
         </div>
         <hr />
         <h2>7-Stage Manual Method</h2>
@@ -1038,11 +1135,121 @@
         algBar.className = 'yellow-alg-bar';
         algBar.textContent = item.alg;
 
+        const breakdownBox = document.createElement('div');
+        breakdownBox.className = 'alg-breakdown-box';
+        const tokens = item.alg.split(' ').filter(Boolean);
+        const chipsHtml = tokens.map((tok, i) =>
+          `<span class="alg-step-chip"><strong>${i + 1}. ${tok}</strong> = ${explainTokenBeginner(tok)}</span>`
+        ).join('');
+        breakdownBox.innerHTML = `
+          <span class="mono muted" style="font-size:11.5px;">Beginner Step-by-Step Meaning:</span>
+          <div class="alg-step-chips">${chipsHtml}</div>
+        `;
+
         card.appendChild(topRow);
         card.appendChild(algBar);
+        card.appendChild(breakdownBox);
         listEl.appendChild(card);
       });
     }
+
+    function explainTokenBeginner(tok) {
+      const map = {
+        "R": "Right layer UP ↑",
+        "R'": "Right layer DOWN ↓",
+        "R2": "Right layer TWICE (180°)",
+        "R2'": "Right layer TWICE (180°)",
+        "r": "Right 2 layers UP ↑↑",
+        "r'": "Right 2 layers DOWN ↓↓",
+        "r2": "Right 2 layers TWICE (180°)",
+        "L": "Left layer DOWN ↓",
+        "L'": "Left layer UP ↑",
+        "L2": "Left layer TWICE (180°)",
+        "l": "Left 2 layers DOWN ↓↓",
+        "l'": "Left 2 layers UP ↑↑",
+        "U": "Top layer LEFT ←",
+        "U'": "Top layer RIGHT →",
+        "U2": "Top layer TWICE (180°)",
+        "U2'": "Top layer TWICE (180°)",
+        "u": "Top 2 layers LEFT ←←",
+        "u'": "Top 2 layers RIGHT →→",
+        "D": "Bottom layer RIGHT →",
+        "D'": "Bottom layer LEFT ←",
+        "D2": "Bottom layer TWICE (180°)",
+        "F": "Front face Clockwise ↻",
+        "F'": "Front face Counter-CW ↺",
+        "F2": "Front face TWICE (180°)",
+        "f": "Front 2 layers Clockwise ↻",
+        "f'": "Front 2 layers Counter-CW ↺",
+        "B": "Back face Clockwise",
+        "B'": "Back face Counter-CW"
+      };
+      return map[tok] || tok;
+    }
+
+    const BEGINNER_KEY_ITEMS = [
+      { tok: "R", name: "Right (1 Layer)", desc: "Push the Right outer column UP (away from you) 1 quarter-turn.", cols: [2], rows: [], dir: "UP" },
+      { tok: "R'", name: "Right Prime", desc: "Pull the Right outer column DOWN (toward you) 1 quarter-turn.", cols: [2], rows: [], dir: "DOWN" },
+      { tok: "r", name: "Wide Right (2 Layers)", desc: "Grab the Right TWO columns together (Right + Middle) and push UP.", cols: [1, 2], rows: [], dir: "UP" },
+      { tok: "r'", name: "Wide Right Prime (2 Layers)", desc: "Grab the Right TWO columns together (Right + Middle) and pull DOWN.", cols: [1, 2], rows: [], dir: "DOWN" },
+      { tok: "U", name: "Up / Top Clockwise", desc: "Push the Top row to the LEFT (clockwise looking from above).", cols: [], rows: [0], dir: "LEFT" },
+      { tok: "U'", name: "Up / Top Prime", desc: "Push the Top row to the RIGHT (counter-clockwise from above).", cols: [], rows: [0], dir: "RIGHT" },
+      { tok: "U2 / U2'", name: "Top Double Turn (180°)", desc: "Turn the Top layer TWICE (halfway around). U2 and U2' end in the exact same spot.", cols: [], rows: [0], dir: "LEFT" },
+      { tok: "F / F'", name: "Front Face", desc: "F = tilt the Front face Clockwise (right). F' = tilt Front Counter-Clockwise (left).", cols: [], rows: [0, 1, 2], dir: "CW" },
+      { tok: "f / f'", name: "Wide Front (2 Layers)", desc: "Turn the Front TWO layers together Clockwise (f) or Counter-Clockwise (f').", cols: [], rows: [0, 1, 2], dir: "CW" },
+      { tok: "L / L'", name: "Left (1 Layer)", desc: "L = pull Left column DOWN toward you. L' = push Left column UP away from you.", cols: [0], rows: [], dir: "DOWN" },
+      { tok: "D / D'", name: "Down / Bottom Layer", desc: "D = push Bottom row to the RIGHT. D' = push Bottom row to the LEFT.", cols: [], rows: [2], dir: "RIGHT" }
+    ];
+
+    function renderBeginnerKeyEntries() {
+      const container = document.getElementById('beginnerKeyEntries');
+      container.innerHTML = '';
+      BEGINNER_KEY_ITEMS.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'key-entry-row';
+        const cvs = document.createElement('canvas');
+        const dpr = window.devicePixelRatio || 1;
+        const sz = 38;
+        cvs.width = sz * dpr;
+        cvs.height = sz * dpr;
+        cvs.style.width = sz + 'px';
+        cvs.style.height = sz + 'px';
+        const c = cvs.getContext('2d');
+        c.scale(dpr, dpr);
+        const gap = 2.2;
+        const cell = (sz - gap * 2) / 3;
+        for (let r = 0; r < 3; r++) {
+          for (let col = 0; col < 3; col++) {
+            const hl = item.cols.includes(col) || item.rows.includes(r);
+            c.fillStyle = hl ? '#F6D31B' : '#707070';
+            c.fillRect(col * (cell + gap), r * (cell + gap), cell, cell);
+            c.strokeStyle = '#141413';
+            c.lineWidth = 1.4;
+            c.strokeRect(col * (cell + gap), r * (cell + gap), cell, cell);
+          }
+        }
+        row.appendChild(cvs);
+
+        const pill = document.createElement('div');
+        pill.className = 'key-token-pill';
+        pill.textContent = item.tok;
+        row.appendChild(pill);
+
+        const textCol = document.createElement('div');
+        textCol.style.flex = '1';
+        textCol.innerHTML = `<div style="font-size:13.5px;font-weight:600;">${item.name}</div><div class="muted" style="font-size:12.5px;">${item.desc}</div>`;
+        row.appendChild(textCol);
+        container.appendChild(row);
+      });
+    }
+
+    document.getElementById('toggleKeyBtn').onclick = () => {
+      const content = document.getElementById('beginnerKeyContent');
+      const hidden = content.classList.toggle('hidden');
+      document.getElementById('toggleKeyBtn').textContent = hidden ? 'Show Key' : 'Hide Key';
+    };
+
+    renderBeginnerKeyEntries();
     renderVisualCases();
 
     document.getElementById('prevBtn').onclick = () => { if (currentStepIndex > 0) { currentStepIndex--; renderGuideUI(); } };

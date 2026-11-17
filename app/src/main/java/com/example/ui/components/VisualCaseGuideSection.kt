@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -9,12 +10,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -23,6 +25,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +70,126 @@ data class VisualCubeCase(
     val leftBars: List<Int>,   // 3 side stickers along Left
     val rightBars: List<Int>   // 3 side stickers along Right
 )
+
+data class NotationGuideEntry(
+    val token: String,
+    val name: String,
+    val beginnerMeaning: String,
+    val highlightCols: List<Int> = emptyList(),
+    val highlightRows: List<Int> = emptyList(),
+    val arrowDirection: String = "UP" // UP, DOWN, LEFT, RIGHT, CW, CCW
+)
+
+val BEGINNER_NOTATION_GUIDE = listOf(
+    NotationGuideEntry(
+        token = "R",
+        name = "Right (1 Layer)",
+        beginnerMeaning = "Push the Right outer column UP (away from you) 1 quarter-turn.",
+        highlightCols = listOf(2),
+        arrowDirection = "UP"
+    ),
+    NotationGuideEntry(
+        token = "R'",
+        name = "Right Prime",
+        beginnerMeaning = "Pull the Right outer column DOWN (toward you) 1 quarter-turn.",
+        highlightCols = listOf(2),
+        arrowDirection = "DOWN"
+    ),
+    NotationGuideEntry(
+        token = "r",
+        name = "Wide Right (2 Layers)",
+        beginnerMeaning = "Grab the Right TWO columns together (Right + Middle) and push UP.",
+        highlightCols = listOf(1, 2),
+        arrowDirection = "UP"
+    ),
+    NotationGuideEntry(
+        token = "r'",
+        name = "Wide Right Prime (2 Layers)",
+        beginnerMeaning = "Grab the Right TWO columns together (Right + Middle) and pull DOWN.",
+        highlightCols = listOf(1, 2),
+        arrowDirection = "DOWN"
+    ),
+    NotationGuideEntry(
+        token = "U",
+        name = "Up / Top Clockwise",
+        beginnerMeaning = "Push the Top row to the LEFT (clockwise looking from above).",
+        highlightRows = listOf(0),
+        arrowDirection = "LEFT"
+    ),
+    NotationGuideEntry(
+        token = "U'",
+        name = "Up / Top Prime",
+        beginnerMeaning = "Push the Top row to the RIGHT (counter-clockwise from above).",
+        highlightRows = listOf(0),
+        arrowDirection = "RIGHT"
+    ),
+    NotationGuideEntry(
+        token = "U2 / U2'",
+        name = "Top Double Turn (180°)",
+        beginnerMeaning = "Turn the Top layer TWICE (halfway around). U2 and U2' end in the exact same position.",
+        highlightRows = listOf(0),
+        arrowDirection = "LEFT"
+    ),
+    NotationGuideEntry(
+        token = "F / F'",
+        name = "Front Face",
+        beginnerMeaning = "F = tilt the Front face Clockwise (right). F' = tilt Front Counter-Clockwise (left).",
+        highlightRows = listOf(0, 1, 2),
+        arrowDirection = "CW"
+    ),
+    NotationGuideEntry(
+        token = "f / f'",
+        name = "Wide Front (2 Layers)",
+        beginnerMeaning = "Turn the Front TWO layers together Clockwise (f) or Counter-Clockwise (f').",
+        highlightRows = listOf(0, 1, 2),
+        arrowDirection = "CW"
+    ),
+    NotationGuideEntry(
+        token = "L / L'",
+        name = "Left (1 Layer)",
+        beginnerMeaning = "L = pull Left column DOWN toward you. L' = push Left column UP away from you.",
+        highlightCols = listOf(0),
+        arrowDirection = "DOWN"
+    ),
+    NotationGuideEntry(
+        token = "D / D'",
+        name = "Down / Bottom Layer",
+        beginnerMeaning = "D = push Bottom row to the RIGHT. D' = push Bottom row to the LEFT.",
+        highlightRows = listOf(2),
+        arrowDirection = "RIGHT"
+    )
+)
+
+fun explainMoveTokenForBeginner(token: String): String = when (token) {
+    "R" -> "Right layer UP ↑"
+    "R'" -> "Right layer DOWN ↓"
+    "R2", "R2'" -> "Right layer TWICE (180°)"
+    "r" -> "Right 2 layers UP ↑↑"
+    "r'" -> "Right 2 layers DOWN ↓↓"
+    "r2", "r2'" -> "Right 2 layers TWICE (180°)"
+    "L" -> "Left layer DOWN ↓"
+    "L'" -> "Left layer UP ↑"
+    "L2", "L2'" -> "Left layer TWICE (180°)"
+    "l" -> "Left 2 layers DOWN ↓↓"
+    "l'" -> "Left 2 layers UP ↑↑"
+    "U" -> "Top layer LEFT ←"
+    "U'" -> "Top layer RIGHT →"
+    "U2", "U2'" -> "Top layer TWICE (180°)"
+    "u" -> "Top 2 layers LEFT ←←"
+    "u'" -> "Top 2 layers RIGHT →→"
+    "D" -> "Bottom layer RIGHT →"
+    "D'" -> "Bottom layer LEFT ←"
+    "D2", "D2'" -> "Bottom layer TWICE (180°)"
+    "F" -> "Front face Clockwise ↻"
+    "F'" -> "Front face Counter-CW ↺"
+    "F2", "F2'" -> "Front face TWICE (180°)"
+    "f" -> "Front 2 layers Clockwise ↻"
+    "f'" -> "Front 2 layers Counter-CW ↺"
+    "B" -> "Back face Clockwise"
+    "B'" -> "Back face Counter-CW"
+    "B2" -> "Back face TWICE (180°)"
+    else -> token
+}
 
 val VISUAL_CUBE_CASES = listOf(
     VisualCubeCase(
@@ -231,6 +354,7 @@ fun VisualCaseGuideSection(
 ) {
     val colors = MaterialTheme.colorScheme
     var selectedCategory by remember { mutableStateOf(CaseCategory.ALL) }
+    var isBeginnerDictionaryOpen by remember { mutableStateOf(true) }
 
     val filteredCases = remember(selectedCategory) {
         if (selectedCategory == CaseCategory.ALL) {
@@ -259,11 +383,17 @@ fun VisualCaseGuideSection(
                     color = colors.onSurface
                 )
                 Text(
-                    text = "Match your top layer pattern to the 2D diagram below (yellow = oriented sticker, gray = unoriented, outer bars = side stickers). Tap any card to load it onto the 3D cube.",
+                    text = "Match your top layer pattern to the 2D diagram below (yellow = oriented sticker, gray = unoriented, outer bars = side stickers). Each card translates every letter into plain English for beginners.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.onSurfaceVariant
                 )
             }
+
+            // Beginner Letter & Symbol Key (What are r, R, U', U2', F', etc.?)
+            BeginnerLetterAndSymbolKey(
+                isExpanded = isBeginnerDictionaryOpen,
+                onToggleExpand = { isBeginnerDictionaryOpen = !isBeginnerDictionaryOpen }
+            )
 
             Row(
                 modifier = Modifier
@@ -295,12 +425,6 @@ fun VisualCaseGuideSection(
                 }
             }
 
-            Text(
-                text = "Notation tip: lowercase 'r' means turn the Right two layers together (wide R); 'f' means Front two layers together.",
-                style = MaterialTheme.typography.labelMedium,
-                color = colors.onSurfaceVariant
-            )
-
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 for ((idx, cubeCase) in filteredCases.withIndex()) {
                     if (idx > 0) {
@@ -326,6 +450,243 @@ fun VisualCaseGuideSection(
 }
 
 @Composable
+private fun BeginnerLetterAndSymbolKey(
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit
+) {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(colors.surfaceVariant)
+            .border(1.dp, colors.outline, RoundedCornerShape(8.dp))
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Beginner Key: What do r, R, U', U2' mean?",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.onSurface
+                )
+                Text(
+                    text = "Capital = 1 outer layer · Lowercase (r, f) = 2 layers together · ' = reverse · 2 = turn twice",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.onSurfaceVariant
+                )
+            }
+            TextButton(
+                onClick = onToggleExpand,
+                modifier = Modifier.testTag("toggle_beginner_symbol_key_button")
+            ) {
+                Text(
+                    text = if (isExpanded) "Hide Key" else "Show Key",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        }
+
+        AnimatedVisibility(visible = isExpanded) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                // Quick 3-rule summary pill strip
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    RuleSummaryBadge(
+                        symbol = "R  U  F",
+                        title = "Capital Letter",
+                        desc = "Turn 1 outer layer (90°)"
+                    )
+                    RuleSummaryBadge(
+                        symbol = "r  f  l  u",
+                        title = "Lowercase Letter",
+                        desc = "Turn 2 layers together (Wide)"
+                    )
+                    RuleSummaryBadge(
+                        symbol = "' (Prime)",
+                        title = "Apostrophe '",
+                        desc = "Reverse / Counter-Clockwise"
+                    )
+                    RuleSummaryBadge(
+                        symbol = "2  or  2'",
+                        title = "Number 2",
+                        desc = "Turn twice (180° half-turn)"
+                    )
+                }
+
+                HorizontalDivider(color = colors.outline)
+
+                // Detailed visual row for each common letter/symbol
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    for (entry in BEGINNER_NOTATION_GUIDE) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(colors.surface)
+                                .border(1.dp, colors.outline, RoundedCornerShape(6.dp))
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            MiniLayerHighlightDiagram(
+                                highlightCols = entry.highlightCols,
+                                highlightRows = entry.highlightRows,
+                                arrowDirection = entry.arrowDirection
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .width(64.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color(0xFFF6D31B))
+                                    .border(1.dp, Color(0xFF141413).copy(alpha = 0.2f), RoundedCornerShape(6.dp))
+                                    .padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = entry.token,
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    ),
+                                    color = Color(0xFF141413)
+                                )
+                            }
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = entry.name,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = colors.onSurface
+                                )
+                                Text(
+                                    text = entry.beginnerMeaning,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = colors.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RuleSummaryBadge(
+    symbol: String,
+    title: String,
+    desc: String
+) {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .width(156.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(colors.surface)
+            .border(1.dp, colors.outline, RoundedCornerShape(6.dp))
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = symbol,
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+            color = colors.onSurface
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.onSurface
+        )
+        Text(
+            text = desc,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
+            color = colors.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun MiniLayerHighlightDiagram(
+    highlightCols: List<Int>,
+    highlightRows: List<Int>,
+    arrowDirection: String,
+    sizeDp: Dp = 38.dp
+) {
+    Canvas(modifier = Modifier.size(sizeDp)) {
+        val w = size.width
+        val gap = w * 0.06f
+        val cell = (w - gap * 2f) / 3f
+        val activeColor = Color(0xFFF6D31B)
+        val idleColor = Color(0xFF707070)
+        val strokeColor = Color(0xFF141413)
+
+        for (r in 0..2) {
+            for (c in 0..2) {
+                val isHighlighted = c in highlightCols || r in highlightRows
+                val left = c * (cell + gap)
+                val top = r * (cell + gap)
+                drawRoundRect(
+                    color = if (isHighlighted) activeColor else idleColor,
+                    topLeft = Offset(left, top),
+                    size = Size(cell, cell),
+                    cornerRadius = CornerRadius(2f, 2f)
+                )
+                drawRoundRect(
+                    color = strokeColor,
+                    topLeft = Offset(left, top),
+                    size = Size(cell, cell),
+                    cornerRadius = CornerRadius(2f, 2f),
+                    style = Stroke(width = 1.5f)
+                )
+            }
+        }
+
+        // Draw simple directional indicator line
+        val cx = w * 0.5f
+        val cy = w * 0.5f
+        if (arrowDirection == "UP" || arrowDirection == "DOWN") {
+            val targetCol = highlightCols.average().toFloat()
+            val x = targetCol * (cell + gap) + cell * 0.5f
+            drawLine(
+                color = strokeColor,
+                start = Offset(x, w * 0.82f),
+                end = Offset(x, w * 0.18f),
+                strokeWidth = 2.5f
+            )
+        } else if (arrowDirection == "LEFT" || arrowDirection == "RIGHT") {
+            val targetRow = highlightRows.average().toFloat()
+            val y = targetRow * (cell + gap) + cell * 0.5f
+            drawLine(
+                color = strokeColor,
+                start = Offset(w * 0.18f, y),
+                end = Offset(w * 0.82f, y),
+                strokeWidth = 2.5f
+            )
+        } else {
+            drawCircle(
+                color = strokeColor,
+                radius = w * 0.24f,
+                center = Offset(cx, cy),
+                style = Stroke(width = 2.2f)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
 fun VisualCaseFlashcard(
     cubeCase: VisualCubeCase,
     onPracticeClick: () -> Unit,
@@ -334,6 +695,9 @@ fun VisualCaseFlashcard(
     val colors = MaterialTheme.colorScheme
     val highlightYellow = Color(0xFFF6D31B)
     val badgeInk = Color(0xFF141413)
+    val moveTokens = remember(cubeCase.algorithm) {
+        cubeCase.algorithm.split(" ").filter { it.isNotBlank() }
+    }
 
     Column(
         modifier = modifier
@@ -400,6 +764,7 @@ fun VisualCaseFlashcard(
             }
         }
 
+        // Yellow Algorithm Formula Bar (matches user screenshot)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -419,6 +784,52 @@ fun VisualCaseFlashcard(
                 color = badgeInk,
                 textAlign = TextAlign.Center
             )
+        }
+
+        // Step-by-Step Beginner Translation of each move in the algorithm
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(colors.surface)
+                .border(1.dp, colors.outline, RoundedCornerShape(8.dp))
+                .padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = "Beginner Step-by-Step Meaning:",
+                style = MaterialTheme.typography.labelMedium,
+                color = colors.onSurfaceVariant
+            )
+
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                for ((idx, tok) in moveTokens.withIndex()) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(colors.surfaceVariant)
+                            .border(1.dp, colors.outline, RoundedCornerShape(6.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Text(
+                            text = "${idx + 1}. $tok",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            color = colors.onSurface
+                        )
+                        Text(
+                            text = "= ${explainMoveTokenForBeginner(tok)}",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
+                            color = colors.onSurfaceVariant
+                        )
+                    }
+                }
+            }
         }
     }
 }

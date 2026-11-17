@@ -1,0 +1,12 @@
+title: CubeLens Solver
+description: Interactive 60fps 3D Rubik's Cube solver and visual OLL/PLL guide for web and Android.
+exclude:
+  - app
+  - gradle
+  - build
+  - .gradle
+  - build.gradle.kts
+  - settings.gradle.kts
+  - gradle.properties
+  - metadata.json
+  - README.md

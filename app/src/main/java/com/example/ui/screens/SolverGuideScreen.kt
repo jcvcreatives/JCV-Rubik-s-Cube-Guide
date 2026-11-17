@@ -598,16 +598,20 @@ private fun CompleteSolvingInstructionsDeck() {
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 NotationLegendRow(
-                    symbol = "U  D  R  L  F  B",
-                    explanation = "90° clockwise turn looking directly at that face."
+                    symbol = "R  L  U  D  F  B",
+                    explanation = "Capital Letter = Turn 1 outer layer 90° clockwise (Right, Left, Up/Top, Down/Bottom, Front, Back)."
                 )
                 NotationLegendRow(
-                    symbol = "U' D' R' L' F' B'",
-                    explanation = "90° counter-clockwise (prime) turn looking at that face."
+                    symbol = "r  l  u  d  f  b",
+                    explanation = "Lowercase Letter = Wide turn! Grab 2 layers together (e.g., 'r' = Right + Middle columns together)."
                 )
                 NotationLegendRow(
-                    symbol = "U2 D2 R2 L2 F2 B2",
-                    explanation = "180° half-turn in either direction."
+                    symbol = "R'  r'  U'  F'",
+                    explanation = "Apostrophe (') = Prime / Reverse! Turn 90° counter-clockwise (opposite direction)."
+                )
+                NotationLegendRow(
+                    symbol = "U2  U2'  R2",
+                    explanation = "Number 2 (or 2') = Half-turn (180°). Twist that layer twice—2 and 2' land in the exact same spot."
                 )
             }
 
