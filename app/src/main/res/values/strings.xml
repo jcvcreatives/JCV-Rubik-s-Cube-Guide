@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">CubeLens Solver</string>
+    <string name="nav_solver_guide">Solve Guide</string>
+    <string name="nav_net_editor">Manual Net</string>
+    <string name="nav_scanner">Camera (Opt)</string>
+    <string name="hero_subtitle">Interactive 3D Step-by-Step Rubik\'s Cube Instructions &amp; Solver</string>
+    <string name="permission_camera_title">Optional Camera Scanner</string>
+    <string name="permission_camera_rationale">Camera scanning is completely optional. You can enter colors manually below or enable the camera to auto-detect stickers.</string>
+    <string name="btn_grant_camera">Use Optional Camera</string>
+    <string name="btn_use_manual_net">Edit Cube Net Manually</string>
+    <string name="btn_capture_face">Lock Face Colors</string>
+    <string name="btn_rescan_all">Reset Faces</string>
+    <string name="btn_load_scramble">Load Scramble</string>
+    <string name="btn_solve_now">Compute Solution</string>
+    <string name="btn_next_step">Next Move</string>
+    <string name="btn_prev_step">Previous</string>
+    <string name="btn_auto_play">Auto-Play</string>
+    <string name="btn_pause_play">Pause</string>
+    <string name="btn_camera_verify">Optional Camera Check</string>
+    <string name="status_solved">Cube is Solved!</string>
+    <string name="cd_hero_banner">CubeLens 3D Rubik\'s Cube Solver Illustration</string>
+    <string name="cd_torch_toggle">Toggle Flashlight Torch</string>
+    <string name="no_camera_mode_title">Manual Entry Mode (Default)</string>
+    <string name="no_camera_guide_header">MANUAL ENTRY INSTRUCTIONS (NO CAMERA NEEDED)</string>
+    <string name="no_camera_step1_title">1. Hold Standard Orientation</string>
+    <string name="no_camera_step1_desc">Hold your cube with the GREEN center facing you (Front) and the WHITE center on top (Up). Center pieces never move relative to each other.</string>
+    <string name="no_camera_step2_title">2. Paint Your 6 Faces Manually</string>
+    <string name="no_camera_step2_desc">Pick a sticker color from the 6-color brush bar and tap the squares on the 3×3 grid (face-by-face) or on the unfolded Manual Net until each color has 9/9 stickers.</string>
+    <string name="no_camera_step3_title">3. Follow 3D Moves &amp; Notation</string>
+    <string name="no_camera_step3_desc">Tap Compute Solution, keep GREEN in front and WHITE on top, and use the Next Move button + 3D arrows to turn each layer step by step.</string>
+</resources>
