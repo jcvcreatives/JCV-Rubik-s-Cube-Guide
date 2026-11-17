@@ -7,8 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,18 +19,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.GridOn
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.GridOn
 import androidx.compose.material.icons.outlined.MenuBook
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -45,24 +40,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.screens.CameraScannerScreen
 import com.example.ui.screens.CubeNetEditorScreen
 import com.example.ui.screens.SolverGuideScreen
-import com.example.ui.theme.ElectricCyan
-import com.example.ui.theme.EmeraldSuccess
-import com.example.ui.theme.GlassBorder
 import com.example.ui.theme.MyApplicationTheme
-import com.example.ui.theme.NeonOrange
-import com.example.ui.theme.ObsidianBg
-import com.example.ui.theme.SlateSurface
-import com.example.ui.theme.SlateSurfaceElevated
 import com.example.viewmodel.AppTab
 import com.example.viewmodel.CubeSolverUiState
 import com.example.viewmodel.CubeSolverViewModel
@@ -72,39 +58,49 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
-                CubeLensApp()
-            }
+            CubeLensRoot()
         }
     }
 }
 
 @Composable
-fun CubeLensApp(
+fun CubeLensRoot(
     viewModel: CubeSolverViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    MyApplicationTheme(darkTheme = uiState.isDarkTheme) {
+        CubeLensApp(uiState = uiState, viewModel = viewModel)
+    }
+}
+
+@Composable
+fun CubeLensApp(
+    uiState: CubeSolverUiState,
+    viewModel: CubeSolverViewModel
+) {
+    val colors = MaterialTheme.colorScheme
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(ObsidianBg)
+            .background(colors.background)
     ) {
         val isExpanded = maxWidth >= 680.dp
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            containerColor = ObsidianBg,
+            containerColor = colors.background,
             contentWindowInsets = WindowInsets.safeDrawing,
             topBar = {
-                CubeLensTopBar(uiState = uiState)
+                CubeLensTopBar(
+                    uiState = uiState,
+                    onToggleTheme = viewModel::toggleDarkTheme
+                )
             },
             bottomBar = {
                 if (!isExpanded) {
                     CubeLensBottomBar(
                         activeTab = uiState.activeTab,
-                        scannedFaceCount = uiState.scannedFaces.size,
-                        solveStepCount = uiState.solveSteps.size,
                         onSelectTab = viewModel::selectTab
                     )
                 }
@@ -118,8 +114,6 @@ fun CubeLensApp(
                 if (isExpanded) {
                     CubeLensNavigationRail(
                         activeTab = uiState.activeTab,
-                        scannedFaceCount = uiState.scannedFaces.size,
-                        solveStepCount = uiState.solveSteps.size,
                         onSelectTab = viewModel::selectTab
                     )
                 }
@@ -181,71 +175,66 @@ fun CubeLensApp(
 }
 
 @Composable
-private fun CubeLensTopBar(uiState: CubeSolverUiState) {
+private fun CubeLensTopBar(
+    uiState: CubeSolverUiState,
+    onToggleTheme: () -> Unit
+) {
+    val colors = MaterialTheme.colorScheme
+
     Surface(
-        color = SlateSurface,
-        border = BorderStroke(1.dp, GlassBorder),
+        color = colors.surface,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = colors.onSurface
+                )
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(CircleShape)
-                            .background(ElectricCyan)
-                    )
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Surface(
-                    color = SlateSurfaceElevated,
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = if (uiState.validationResult.isValid) EmeraldSuccess.copy(alpha = 0.6f)
-                        else NeonOrange
-                    )
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
                         text = when {
-                            uiState.cubeState.isSolved() -> "SOLVED (54/54)"
-                            uiState.validationResult.isValid -> "${uiState.solveSteps.size} MOVES TO SOLVE"
-                            else -> "EDIT NET NEEDED"
+                            uiState.cubeState.isSolved() -> "Solved"
+                            uiState.validationResult.isValid -> "${uiState.solveSteps.size} moves"
+                            else -> "Check net"
                         },
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (uiState.validationResult.isValid) EmeraldSuccess else NeonOrange,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        color = when {
+                            uiState.cubeState.isSolved() -> colors.tertiary
+                            uiState.validationResult.isValid -> colors.onSurfaceVariant
+                            else -> colors.error
+                        }
                     )
+
+                    Surface(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .border(BorderStroke(1.dp, colors.outline), RoundedCornerShape(6.dp))
+                            .clickable { onToggleTheme() }
+                            .testTag("theme_toggle_button"),
+                        color = colors.surfaceVariant
+                    ) {
+                        Text(
+                            text = if (uiState.isDarkTheme) "Light" else "Dark",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = colors.onSurface,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                        )
+                    }
                 }
             }
-
-            if (!uiState.statusMessage.isNullOrBlank()) {
-                Text(
-                    text = uiState.statusMessage,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            HorizontalDivider(color = colors.outline)
         }
     }
 }
@@ -253,102 +242,86 @@ private fun CubeLensTopBar(uiState: CubeSolverUiState) {
 @Composable
 private fun CubeLensBottomBar(
     activeTab: AppTab,
-    scannedFaceCount: Int,
-    solveStepCount: Int,
     onSelectTab: (AppTab) -> Unit
 ) {
-    NavigationBar(
-        containerColor = SlateSurface,
-        tonalElevation = 8.dp
-    ) {
-        // Tab 1 (Main): Solve Guide & Instructions
-        NavigationBarItem(
-            selected = activeTab == AppTab.SOLVE_GUIDE,
-            onClick = { onSelectTab(AppTab.SOLVE_GUIDE) },
-            icon = {
-                BadgedBox(
-                    badge = {
-                        if (solveStepCount > 0) {
-                            Badge(containerColor = NeonOrange, contentColor = Color.Black) {
-                                Text("$solveStepCount")
-                            }
-                        }
-                    }
-                ) {
+    val colors = MaterialTheme.colorScheme
+    Column {
+        HorizontalDivider(color = colors.outline)
+        NavigationBar(
+            containerColor = colors.surface,
+            tonalElevation = 0.dp
+        ) {
+            NavigationBarItem(
+                selected = activeTab == AppTab.SOLVE_GUIDE,
+                onClick = { onSelectTab(AppTab.SOLVE_GUIDE) },
+                icon = {
                     Icon(
-                        imageVector = if (activeTab == AppTab.SOLVE_GUIDE) Icons.Filled.MenuBook else Icons.Outlined.MenuBook,
+                        imageVector = Icons.Outlined.MenuBook,
                         contentDescription = stringResource(R.string.nav_solver_guide)
                     )
-                }
-            },
-            label = { Text(stringResource(R.string.nav_solver_guide)) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = ElectricCyan,
-                selectedTextColor = ElectricCyan,
-                indicatorColor = SlateSurfaceElevated
-            ),
-            modifier = Modifier.testTag("nav_tab_guide")
-        )
+                },
+                label = { Text(stringResource(R.string.nav_solver_guide)) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = colors.onSurface,
+                    selectedTextColor = colors.onSurface,
+                    unselectedIconColor = colors.onSurfaceVariant,
+                    unselectedTextColor = colors.onSurfaceVariant,
+                    indicatorColor = colors.surfaceVariant
+                ),
+                modifier = Modifier.testTag("nav_tab_guide")
+            )
 
-        // Tab 2: Manual Cube Net
-        NavigationBarItem(
-            selected = activeTab == AppTab.CUBE_NET,
-            onClick = { onSelectTab(AppTab.CUBE_NET) },
-            icon = {
-                Icon(
-                    imageVector = if (activeTab == AppTab.CUBE_NET) Icons.Filled.GridOn else Icons.Outlined.GridOn,
-                    contentDescription = stringResource(R.string.nav_net_editor)
-                )
-            },
-            label = { Text(stringResource(R.string.nav_net_editor)) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = ElectricCyan,
-                selectedTextColor = ElectricCyan,
-                indicatorColor = SlateSurfaceElevated
-            ),
-            modifier = Modifier.testTag("nav_tab_net")
-        )
-
-        // Tab 3 (Optional): Camera Scanner
-        NavigationBarItem(
-            selected = activeTab == AppTab.SCANNER,
-            onClick = { onSelectTab(AppTab.SCANNER) },
-            icon = {
-                BadgedBox(
-                    badge = {
-                        if (scannedFaceCount in 1..5) {
-                            Badge(containerColor = ElectricCyan, contentColor = Color.Black) {
-                                Text("$scannedFaceCount/6")
-                            }
-                        }
-                    }
-                ) {
+            NavigationBarItem(
+                selected = activeTab == AppTab.CUBE_NET,
+                onClick = { onSelectTab(AppTab.CUBE_NET) },
+                icon = {
                     Icon(
-                        imageVector = if (activeTab == AppTab.SCANNER) Icons.Filled.CameraAlt else Icons.Outlined.CameraAlt,
+                        imageVector = Icons.Outlined.GridOn,
+                        contentDescription = stringResource(R.string.nav_net_editor)
+                    )
+                },
+                label = { Text(stringResource(R.string.nav_net_editor)) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = colors.onSurface,
+                    selectedTextColor = colors.onSurface,
+                    unselectedIconColor = colors.onSurfaceVariant,
+                    unselectedTextColor = colors.onSurfaceVariant,
+                    indicatorColor = colors.surfaceVariant
+                ),
+                modifier = Modifier.testTag("nav_tab_net")
+            )
+
+            NavigationBarItem(
+                selected = activeTab == AppTab.SCANNER,
+                onClick = { onSelectTab(AppTab.SCANNER) },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.CameraAlt,
                         contentDescription = stringResource(R.string.nav_scanner)
                     )
-                }
-            },
-            label = { Text(stringResource(R.string.nav_scanner)) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = ElectricCyan,
-                selectedTextColor = ElectricCyan,
-                indicatorColor = SlateSurfaceElevated
-            ),
-            modifier = Modifier.testTag("nav_tab_scanner")
-        )
+                },
+                label = { Text(stringResource(R.string.nav_scanner)) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = colors.onSurface,
+                    selectedTextColor = colors.onSurface,
+                    unselectedIconColor = colors.onSurfaceVariant,
+                    unselectedTextColor = colors.onSurfaceVariant,
+                    indicatorColor = colors.surfaceVariant
+                ),
+                modifier = Modifier.testTag("nav_tab_scanner")
+            )
+        }
     }
 }
 
 @Composable
 private fun CubeLensNavigationRail(
     activeTab: AppTab,
-    scannedFaceCount: Int,
-    solveStepCount: Int,
     onSelectTab: (AppTab) -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     NavigationRail(
-        containerColor = SlateSurface,
+        containerColor = colors.surface,
         modifier = Modifier.fillMaxHeight()
     ) {
         NavigationRailItem(
@@ -356,11 +329,11 @@ private fun CubeLensNavigationRail(
             onClick = { onSelectTab(AppTab.SOLVE_GUIDE) },
             icon = {
                 Icon(
-                    imageVector = if (activeTab == AppTab.SOLVE_GUIDE) Icons.Filled.MenuBook else Icons.Outlined.MenuBook,
+                    imageVector = Icons.Outlined.MenuBook,
                     contentDescription = stringResource(R.string.nav_solver_guide)
                 )
             },
-            label = { Text("${stringResource(R.string.nav_solver_guide)} ($solveStepCount)") },
+            label = { Text(stringResource(R.string.nav_solver_guide)) },
             modifier = Modifier.testTag("rail_tab_guide")
         )
 
@@ -369,7 +342,7 @@ private fun CubeLensNavigationRail(
             onClick = { onSelectTab(AppTab.CUBE_NET) },
             icon = {
                 Icon(
-                    imageVector = if (activeTab == AppTab.CUBE_NET) Icons.Filled.GridOn else Icons.Outlined.GridOn,
+                    imageVector = Icons.Outlined.GridOn,
                     contentDescription = stringResource(R.string.nav_net_editor)
                 )
             },
@@ -382,11 +355,11 @@ private fun CubeLensNavigationRail(
             onClick = { onSelectTab(AppTab.SCANNER) },
             icon = {
                 Icon(
-                    imageVector = if (activeTab == AppTab.SCANNER) Icons.Filled.CameraAlt else Icons.Outlined.CameraAlt,
+                    imageVector = Icons.Outlined.CameraAlt,
                     contentDescription = stringResource(R.string.nav_scanner)
                 )
             },
-            label = { Text("${stringResource(R.string.nav_scanner)} ($scannedFaceCount/6)") },
+            label = { Text(stringResource(R.string.nav_scanner)) },
             modifier = Modifier.testTag("rail_tab_scanner")
         )
     }

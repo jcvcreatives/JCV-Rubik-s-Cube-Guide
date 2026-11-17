@@ -2,33 +2,33 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Telemetry HUD Dark Palette
-val ObsidianBg = Color(0xFF0B0E14)
-val SlateSurface = Color(0xFF131822)
-val SlateSurfaceElevated = Color(0xFF1C2331)
-val SlateSurfaceBright = Color(0xFF263042)
-val GlassBorder = Color(0xFF2E3A4F)
+// Swiss Editorial Minimalist Palette (Warm Paper, Crisp White, Carbon Ink, Hairline Stone)
+val ObsidianBg = Color(0xFFF7F6F2)
+val SlateSurface = Color(0xFFFFFFFF)
+val SlateSurfaceElevated = Color(0xFFF0EFEA)
+val SlateSurfaceBright = Color(0xFFE6E4DD)
+val GlassBorder = Color(0xFFE4E2DC)
 
-// Brand & Accent Colors
-val ElectricCyan = Color(0xFF00E5FF)
-val CyanContainer = Color(0xFF00363D)
-val OnCyanContainer = Color(0xFF97F0FF)
+// Minimalist Monochrome & Tactile Accents
+val ElectricCyan = Color(0xFF141413)       // Primary Carbon Ink
+val CyanContainer = Color(0xFFEBEAE4)
+val OnCyanContainer = Color(0xFF141413)
 
-val NeonOrange = Color(0xFFFF6D00)
-val OrangeContainer = Color(0xFF3E1800)
-val OnOrangeContainer = Color(0xFFFFDBC8)
+val NeonOrange = Color(0xFF3D3C38)         // Secondary Warm Graphite
+val OrangeContainer = Color(0xFFEAE8E1)
+val OnOrangeContainer = Color(0xFF141413)
 
-val EmeraldSuccess = Color(0xFF00E676)
-val EmeraldContainer = Color(0xFF003919)
-val CrimsonError = Color(0xFFFF5252)
+val EmeraldSuccess = Color(0xFF1F7A4C)     // Understated Forest Green
+val EmeraldContainer = Color(0xFFE6F2EC)
+val CrimsonError = Color(0xFFC93B2B)       // Matte Vermilion
 
-val TextPrimary = Color(0xFFF1F5F9)
-val TextSecondary = Color(0xFF94A3B8)
+val TextPrimary = Color(0xFF141413)
+val TextSecondary = Color(0xFF6E6D68)
 
-// Calibrated High-Contrast Rubik's Cube Sticker Palette
-val StickerWhite = Color(0xFFF8FAFC)
-val StickerYellow = Color(0xFFFFD600)
-val StickerRed = Color(0xFFFF2438)
-val StickerOrange = Color(0xFFFF7A00)
-val StickerGreen = Color(0xFF00E676)
-val StickerBlue = Color(0xFF1E70FF)
+// Tactile Matte Rubik's Cube Sticker Palette
+val StickerWhite = Color(0xFFF5F4F0)
+val StickerYellow = Color(0xFFEFC034)
+val StickerRed = Color(0xFFD63828)
+val StickerOrange = Color(0xFFE67822)
+val StickerGreen = Color(0xFF268E57)
+val StickerBlue = Color(0xFF245EE0)

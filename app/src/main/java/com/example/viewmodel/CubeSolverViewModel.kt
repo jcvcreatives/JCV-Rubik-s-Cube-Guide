@@ -46,6 +46,7 @@ data class CubeSolverUiState(
     val cameraVerifyMatchCount: Int = 0,
     val preferNoCameraMode: Boolean = true,
     val isNoCameraGuideExpanded: Boolean = true,
+    val isDarkTheme: Boolean = false,
     val activeScrambleLabel: String = "6-Move Speed Calibration (R U F' L D2 R')",
     val statusMessage: String? = "Follow the step-by-step instructions & 3D move guide below, or edit your cube in Manual Net."
 ) {
@@ -84,6 +85,10 @@ class CubeSolverViewModel : ViewModel() {
 
     private var autoPlayJob: Job? = null
     private var lastAutoCaptureTimeMs: Long = 0L
+
+    fun toggleDarkTheme() {
+        _uiState.update { it.copy(isDarkTheme = !it.isDarkTheme) }
+    }
 
     fun selectTab(tab: AppTab) {
         if (tab != AppTab.SOLVE_GUIDE) {

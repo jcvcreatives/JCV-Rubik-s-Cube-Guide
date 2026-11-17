@@ -1,8 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="66dp"
-        android:height="66dp"
-        android:drawable="@drawable/img_launcher_cube_1794872800829"
-        android:gravity="center" />
-</layer-list>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Minimalist 3x3 Geometric Cube Grid centered in 66dp safe zone (30..78) -->
+    <!-- Row 1 -->
+    <path android:fillColor="#F4F3EF" android:pathData="M31,31h14v14h-14z" />
+    <path android:fillColor="#F4F3EF" android:pathData="M47,31h14v14h-14z" />
+    <path android:fillColor="#F2C94C" android:pathData="M63,31h14v14h-14z" />
+    <!-- Row 2 -->
+    <path android:fillColor="#27965C" android:pathData="M31,47h14v14h-14z" />
+    <path android:fillColor="#F4F3EF" android:pathData="M47,47h14v14h-14z" />
+    <path android:fillColor="#D93829" android:pathData="M63,47h14v14h-14z" />
+    <!-- Row 3 -->
+    <path android:fillColor="#2563EB" android:pathData="M31,63h14v14h-14z" />
+    <path android:fillColor="#E87A24" android:pathData="M47,63h14v14h-14z" />
+    <path android:fillColor="#D93829" android:pathData="M63,63h14v14h-14z" />
+</vector>

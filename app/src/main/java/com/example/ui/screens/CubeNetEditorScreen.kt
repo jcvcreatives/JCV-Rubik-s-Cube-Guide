@@ -17,29 +17,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,13 +46,6 @@ import com.example.model.CubeMove
 import com.example.model.CubeState
 import com.example.model.CubeValidationResult
 import com.example.ui.components.Cube3DCanvas
-import com.example.ui.theme.CrimsonError
-import com.example.ui.theme.ElectricCyan
-import com.example.ui.theme.EmeraldSuccess
-import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.NeonOrange
-import com.example.ui.theme.SlateSurface
-import com.example.ui.theme.SlateSurfaceElevated
 import com.example.viewmodel.CubeSolverUiState
 
 @Composable
@@ -86,77 +70,36 @@ fun CubeNetEditorScreen(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(
-            modifier = Modifier.widthIn(max = 600.dp),
+            modifier = Modifier.widthIn(max = 580.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // 1. Live 3D Cube Preview + Validation Status Card
             ValidationAndMini3DCard(
                 cubeState = uiState.cubeState,
                 validation = uiState.validationResult,
                 onComputeAndSolve = onComputeAndSolve
             )
 
-            // 2. No-Camera Manual Net Orientation Instructions
-            NoCameraNetOrientationCard()
-
-            // 3. Color Paint Palette Picker
             ColorPaletteSelectorCard(
                 selectedColor = uiState.selectedPaintColor,
                 colorCounts = uiState.validationResult.colorCounts,
                 onSelectColor = onSelectPaintColor
             )
 
-            // 4. Unfolded 54-Sticker 2D Cross Net
             UnfoldedCubeNetCard(
                 cubeState = uiState.cubeState,
                 onTapSticker = onPaintSticker
             )
 
-            // 5. Interactive Layer Turn Simulator & Reset Controls
+            NoCameraNetOrientationCard()
+
             ManualMoveSimulatorCard(
                 onApplyMove = onApplyManualMove,
                 onRandomScramble = onRandomScramble,
                 onResetSolved = onResetSolved
-            )
-        }
-    }
-}
-
-@Composable
-private fun NoCameraNetOrientationCard() {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("net_no_camera_guide_card"),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = SlateSurface),
-        border = BorderStroke(1.dp, GlassBorder)
-    ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(
-                text = "NO-CAMERA MANUAL NET ENTRY GUIDE",
-                style = MaterialTheme.typography.labelMedium,
-                color = NeonOrange
-            )
-            Text(
-                text = "Hold your physical cube with GREEN in front (F) and WHITE on top (U):",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "• U (White): Tilt the top toward you (Blue edge at the very top).\n" +
-                    "• L (Orange), F (Green), R (Red), B (Blue): Keep White on top as you inspect around the middle.\n" +
-                    "• D (Yellow): Tilt the bottom toward you (Green edge at the top).",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -168,28 +111,26 @@ private fun ValidationAndMini3DCard(
     validation: CubeValidationResult,
     onComputeAndSolve: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SlateSurface),
-        border = BorderStroke(
-            width = 1.5.dp,
-            color = if (validation.isValid) EmeraldSuccess.copy(alpha = 0.6f) else CrimsonError.copy(alpha = 0.7f)
-        )
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = BorderStroke(1.dp, colors.outline)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Cube3DCanvas(
                 cubeState = cubeState,
                 modifier = Modifier
-                    .size(118.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(SlateSurfaceElevated)
+                    .size(112.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(colors.surfaceVariant)
                     .testTag("net_mini_3d_cube")
             )
 
@@ -197,68 +138,50 @@ private fun ValidationAndMini3DCard(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(
-                        imageVector = if (validation.isValid) Icons.Default.CheckCircle else Icons.Default.ErrorOutline,
-                        contentDescription = null,
-                        tint = if (validation.isValid) EmeraldSuccess else CrimsonError,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = if (validation.isValid) "VALID 3×3×3 STATE" else "NEEDS STICKER FIX",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (validation.isValid) EmeraldSuccess else CrimsonError
-                    )
-                }
+                Text(
+                    text = if (validation.isValid) "Valid Cube State" else "Sticker Count Mismatch",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = if (validation.isValid) colors.tertiary else colors.error
+                )
 
                 if (validation.isValid) {
                     Text(
                         text = if (cubeState.isSolved()) {
                             "All 54 stickers are in their solved positions."
                         } else {
-                            "All 6 color counts (9 each) and 20 cubie pieces are physically solvable."
+                            "All 6 colors have 9 stickers and valid edge/corner pieces."
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = colors.onSurfaceVariant
                     )
                     Button(
                         onClick = onComputeAndSolve,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(44.dp)
+                            .height(42.dp)
                             .testTag("net_solve_button"),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = NeonOrange,
-                            contentColor = Color(0xFF1F0B00)
+                            containerColor = colors.primary,
+                            contentColor = colors.onPrimary
                         )
                     ) {
                         Text(
-                            text = "Open 3D Solve Guide",
+                            text = "Solve Cube",
                             style = MaterialTheme.typography.labelLarge
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
                         )
                     }
                 } else {
                     Text(
-                        text = validation.errorSummary ?: "Invalid sticker distribution",
+                        text = validation.errorSummary ?: "Each color must appear 9 times.",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = colors.onSurface
                     )
                     if (!validation.actionableSuggestion.isNullOrBlank()) {
                         Text(
                             text = validation.actionableSuggestion,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = colors.onSurfaceVariant
                         )
                     }
                 }
@@ -273,32 +196,22 @@ private fun ColorPaletteSelectorCard(
     colorCounts: Map<CubeColor, Int>,
     onSelectColor: (CubeColor) -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = SlateSurface),
-        border = BorderStroke(1.dp, GlassBorder)
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = BorderStroke(1.dp, colors.outline)
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Palette,
-                    contentDescription = null,
-                    tint = ElectricCyan,
-                    modifier = Modifier.size(18.dp)
-                )
-                Text(
-                    text = "SELECT STICKER BRUSH COLOR (TARGET: 9 PER COLOR)",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = ElectricCyan
-                )
-            }
+            Text(
+                text = "Sticker Brush (9 per color)",
+                style = MaterialTheme.typography.titleLarge,
+                color = colors.onSurface
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -312,12 +225,12 @@ private fun ColorPaletteSelectorCard(
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isSelected) SlateSurfaceElevated else Color.Transparent)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) colors.surfaceVariant else Color.Transparent)
                             .border(
-                                width = if (isSelected) 2.dp else 1.dp,
-                                color = if (isSelected) ElectricCyan else GlassBorder,
-                                shape = RoundedCornerShape(12.dp)
+                                width = if (isSelected) 1.5.dp else 1.dp,
+                                color = if (isSelected) colors.primary else colors.outline,
+                                shape = RoundedCornerShape(8.dp)
                             )
                             .clickable { onSelectColor(color) }
                             .padding(vertical = 8.dp)
@@ -327,22 +240,22 @@ private fun ColorPaletteSelectorCard(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(26.dp)
+                                .size(24.dp)
                                 .clip(CircleShape)
                                 .background(color.composeColor)
-                                .border(1.5.dp, Color.Black.copy(alpha = 0.5f), CircleShape),
+                                .border(1.dp, Color(0xFF1A1918).copy(alpha = 0.35f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = color.shortCode.toString(),
                                 style = MaterialTheme.typography.labelMedium,
-                                color = if (color.textDark) Color(0xFF0B0E14) else Color.White
+                                color = if (color.textDark) Color(0xFF141413) else Color.White
                             )
                         }
                         Text(
                             text = "$count/9",
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (countOk) EmeraldSuccess else CrimsonError
+                            color = if (countOk) colors.onSurfaceVariant else colors.error
                         )
                     }
                 }
@@ -356,11 +269,12 @@ private fun UnfoldedCubeNetCard(
     cubeState: CubeState,
     onTapSticker: (CubeFace, Int) -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SlateSurface),
-        border = BorderStroke(1.dp, GlassBorder)
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = BorderStroke(1.dp, colors.outline)
     ) {
         Column(
             modifier = Modifier
@@ -370,19 +284,18 @@ private fun UnfoldedCubeNetCard(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
-                text = "54-STICKER UNFOLDED CUBE NET (TAP ANY OUTER STICKER TO PAINT)",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "Unfolded 54-Sticker Net (Tap to paint)",
+                style = MaterialTheme.typography.labelLarge,
+                color = colors.onSurfaceVariant
             )
 
-            val faceSize = 76.dp
+            val faceSize = 74.dp
             val gap = 6.dp
 
             Column(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(gap)
             ) {
-                // Top Row: [spacer] [U]
                 Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
                     Spacer(modifier = Modifier.size(faceSize))
                     MiniFaceGrid(
@@ -393,7 +306,6 @@ private fun UnfoldedCubeNetCard(
                     )
                 }
 
-                // Middle Row: [L] [F] [R] [B]
                 Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
                     for (face in listOf(CubeFace.L, CubeFace.F, CubeFace.R, CubeFace.B)) {
                         MiniFaceGrid(
@@ -405,7 +317,6 @@ private fun UnfoldedCubeNetCard(
                     }
                 }
 
-                // Bottom Row: [spacer] [D]
                 Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
                     Spacer(modifier = Modifier.size(faceSize))
                     MiniFaceGrid(
@@ -430,18 +341,17 @@ private fun MiniFaceGrid(
     Column(
         modifier = Modifier
             .size(size)
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF0A0D12))
-            .border(1.dp, GlassBorder, RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color(0xFF1A1918))
             .padding(3.dp),
-        verticalArrangement = Arrangement.spacedBy(2.5.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         for (row in 0..2) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(2.5.dp)
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 for (col in 0..2) {
                     val idx = row * 3 + col
@@ -452,7 +362,7 @@ private fun MiniFaceGrid(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxSize()
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(3.dp))
                             .background(color.composeColor)
                             .clickable(enabled = !isCenter) { onTapSticker(face, idx) }
                             .testTag("net_sticker_${face.code}_$idx"),
@@ -463,7 +373,7 @@ private fun MiniFaceGrid(
                                 text = face.code.toString(),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (color.textDark) Color(0xFF0B0E14) else Color.White
+                                color = if (color.textDark) Color(0xFF141413) else Color.White
                             )
                         }
                     }
@@ -474,16 +384,49 @@ private fun MiniFaceGrid(
 }
 
 @Composable
+private fun NoCameraNetOrientationCard() {
+    val colors = MaterialTheme.colorScheme
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("net_no_camera_guide_card"),
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = BorderStroke(1.dp, colors.outline)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = "Net Orientation Guide",
+                style = MaterialTheme.typography.titleLarge,
+                color = colors.onSurface
+            )
+            Text(
+                text = "Hold GREEN in front (F) and WHITE on top (U):\n" +
+                    "• U (White): Tilt top toward you (Blue edge at top).\n" +
+                    "• L, F, R, B: Keep White on top as you inspect around the middle.\n" +
+                    "• D (Yellow): Tilt bottom toward you (Green edge at top).",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
 private fun ManualMoveSimulatorCard(
     onApplyMove: (CubeMove) -> Unit,
     onRandomScramble: () -> Unit,
     onResetSolved: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = SlateSurface),
-        border = BorderStroke(1.dp, GlassBorder)
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = BorderStroke(1.dp, colors.outline)
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -495,41 +438,24 @@ private fun ManualMoveSimulatorCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "MANUAL 3D LAYER TURN SIMULATOR",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = ElectricCyan
+                    text = "Manual Layer Turns",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = colors.onSurface
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = onRandomScramble,
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                        modifier = Modifier.height(34.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Shuffle,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(onClick = onRandomScramble) {
                         Text("Scramble", style = MaterialTheme.typography.labelMedium)
                     }
-                    OutlinedButton(
+                    TextButton(
                         onClick = onResetSolved,
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                        modifier = Modifier
-                            .height(34.dp)
-                            .testTag("reset_solved_button")
+                        modifier = Modifier.testTag("reset_solved_button")
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.RestartAlt,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Solved", style = MaterialTheme.typography.labelMedium)
+                        Text("Reset", style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
+
+            HorizontalDivider(color = colors.outline)
 
             val quickMoves = listOf(
                 CubeMove.U, CubeMove.U_PRIME,
@@ -547,10 +473,11 @@ private fun ManualMoveSimulatorCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 for (move in quickMoves) {
-                    FilledTonalButton(
+                    OutlinedButton(
                         onClick = { onApplyMove(move) },
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, colors.outline),
                         modifier = Modifier.testTag("sim_move_${move.notation}")
                     ) {
                         Text(

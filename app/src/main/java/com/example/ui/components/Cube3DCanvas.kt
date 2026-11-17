@@ -1,11 +1,11 @@
 package com.example.ui.components
 
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.runtime.Composable
@@ -25,8 +25,6 @@ import com.example.model.CubeFace
 import com.example.model.CubeGeometry
 import com.example.model.CubeMove
 import com.example.model.CubeState
-import com.example.ui.theme.ElectricCyan
-import com.example.ui.theme.NeonOrange
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
@@ -37,35 +35,40 @@ private data class Vec3(val x: Float, val y: Float, val z: Float)
 private data class StickerPolygon(
     val points2D: List<Offset>,
     val avgZ: Float,
-    val fillColor: Color,
-    val isHighlightedLayer: Boolean,
-    val isCenter: Boolean
+    val fillColor: Color
 )
 
 /**
- * Interactive 3D perspective Rubik's Cube renderer with touch-drag orbit control
- * and animated 3D layer-turn trajectory arrows for the active [highlightedMove].
+ * 60fps hardware-accelerated 3D Rubik's Cube renderer with live 3D slice rotation
+ * animation for the active [highlightedMove] and smooth touch-drag orbit control.
  */
 @Composable
 fun Cube3DCanvas(
     cubeState: CubeState,
     modifier: Modifier = Modifier,
     highlightedMove: CubeMove? = null,
-    initialYawDeg: Float = -34f,
-    initialPitchDeg: Float = 24f
+    initialYawDeg: Float = -32f,
+    initialPitchDeg: Float = 22f
 ) {
     var yawDeg by remember { mutableFloatStateOf(initialYawDeg) }
     var pitchDeg by remember { mutableFloatStateOf(initialPitchDeg) }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "movePulse")
-    val pulsePhase by infiniteTransition.animateFloat(
+    // 60fps smooth slice turn animation (0.0 -> 1.0 -> hold -> reset)
+    val transition = rememberInfiniteTransition(label = "sliceTurn60fps")
+    val turnProgress by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            animation = keyframes {
+                durationMillis = 1600
+                0f at 0 using FastOutSlowInEasing
+                0f at 220 using FastOutSlowInEasing
+                1f at 1150 using FastOutSlowInEasing
+                1f at 1600
+            },
             repeatMode = RepeatMode.Restart
         ),
-        label = "pulsePhase"
+        label = "turnProgress"
     )
 
     Canvas(
@@ -90,13 +93,37 @@ fun Cube3DCanvas(
         val cosP = cos(pitchRad)
         val sinP = sin(pitchRad)
 
-        // Rotates a 3D world point (where +X=Right, +Y=Up, +Z=Front) into camera space
+        val activeFace = highlightedMove?.face
+        val targetAngleRad = when (highlightedMove?.turnsCw) {
+            1 -> (-Math.PI / 2.0).toFloat()
+            2 -> (-Math.PI).toFloat()
+            3 -> (Math.PI / 2.0).toFloat()
+            else -> 0f
+        }
+        val currentSliceAngle = targetAngleRad * turnProgress
+        val cosSlice = cos(currentSliceAngle)
+        val sinSlice = sin(currentSliceAngle)
+
+        // Rotates a 3D point around the active face normal using Rodrigues' rotation formula at 60fps
+        fun rotateAroundFaceAxis(v: Vec3, face: CubeFace): Vec3 {
+            val kx = face.nx.toFloat()
+            val ky = face.ny.toFloat()
+            val kz = face.nz.toFloat()
+            val dot = v.x * kx + v.y * ky + v.z * kz
+            val cx = ky * v.z - kz * v.y
+            val cy = kz * v.x - kx * v.z
+            val cz = kx * v.y - ky * v.x
+            return Vec3(
+                x = v.x * cosSlice + cx * sinSlice + kx * dot * (1f - cosSlice),
+                y = v.y * cosSlice + cy * sinSlice + ky * dot * (1f - cosSlice),
+                z = v.z * cosSlice + cz * sinSlice + kz * dot * (1f - cosSlice)
+            )
+        }
+
         fun transform3D(v: Vec3): Vec3 {
-            // Yaw around Y axis
             val x1 = v.x * cosY + v.z * sinY
             val z1 = -v.x * sinY + v.z * cosY
             val y1 = v.y
-            // Pitch around X axis
             val y2 = y1 * cosP - z1 * sinP
             val z2 = y1 * sinP + z1 * cosP
             return Vec3(x1, y2, z2)
@@ -111,27 +138,18 @@ fun Cube3DCanvas(
             )
         }
 
-        // Subtle ambient glow behind the 3D cube
-        drawCircle(
-            color = ElectricCyan.copy(alpha = 0.08f),
-            radius = minDim * 0.44f,
-            center = center
-        )
-
         val polygons = ArrayList<StickerPolygon>(108)
-        val activeFace = highlightedMove?.face
 
         for ((idx, s) in CubeGeometry.stickers.withIndex()) {
             val color = cubeState.stickers[idx].composeColor
-            val isOnHighlightedLayer = if (activeFace != null) {
+            val isOnActiveSlice = if (activeFace != null) {
                 (s.x * activeFace.nx + s.y * activeFace.ny + s.z * activeFace.nz) == 1
             } else {
                 false
             }
 
-            // Build tangent vectors uVec and vVec on the sticker's plane
-            val normal = Vec3(s.nx.toFloat(), s.ny.toFloat(), s.nz.toFloat())
-            val (uVec, vVec) = when (s.face) {
+            val baseNormal = Vec3(s.nx.toFloat(), s.ny.toFloat(), s.nz.toFloat())
+            val (baseU, baseV) = when (s.face) {
                 CubeFace.F -> Vec3(1f, 0f, 0f) to Vec3(0f, 1f, 0f)
                 CubeFace.B -> Vec3(-1f, 0f, 0f) to Vec3(0f, 1f, 0f)
                 CubeFace.R -> Vec3(0f, 0f, -1f) to Vec3(0f, 1f, 0f)
@@ -140,23 +158,41 @@ fun Cube3DCanvas(
                 CubeFace.D -> Vec3(1f, 0f, 0f) to Vec3(0f, 0f, 1f)
             }
 
-            // Center of this sticker in [-1.5, +1.5] cube coordinates (each cubie has width 0.66f)
             val cubieSize = 0.66f
-            val center3D = Vec3(
-                x = s.x * cubieSize + normal.x * (cubieSize * 0.5f),
-                y = s.y * cubieSize + normal.y * (cubieSize * 0.5f),
-                z = s.z * cubieSize + normal.z * (cubieSize * 0.5f)
+            val rawCenter3D = Vec3(
+                x = s.x * cubieSize + baseNormal.x * (cubieSize * 0.5f),
+                y = s.y * cubieSize + baseNormal.y * (cubieSize * 0.5f),
+                z = s.z * cubieSize + baseNormal.z * (cubieSize * 0.5f)
             )
 
-            // Backface culling check in camera space
+            val center3D = if (isOnActiveSlice && activeFace != null) {
+                rotateAroundFaceAxis(rawCenter3D, activeFace)
+            } else {
+                rawCenter3D
+            }
+            val normal = if (isOnActiveSlice && activeFace != null) {
+                rotateAroundFaceAxis(baseNormal, activeFace)
+            } else {
+                baseNormal
+            }
+            val uVec = if (isOnActiveSlice && activeFace != null) {
+                rotateAroundFaceAxis(baseU, activeFace)
+            } else {
+                baseU
+            }
+            val vVec = if (isOnActiveSlice && activeFace != null) {
+                rotateAroundFaceAxis(baseV, activeFace)
+            } else {
+                baseV
+            }
+
             val camNormal = transform3D(normal)
             val camCenter = transform3D(center3D)
-            // Vector from point to camera at (0, 0, 6.2)
             val viewVecZ = 6.2f - camCenter.z
             val dotView = -camCenter.x * camNormal.x - camCenter.y * camNormal.y + viewVecZ * camNormal.z
             if (dotView <= 0f) continue
 
-            // 1. Black plastic cubie backing quad (halfSize = 0.33f)
+            // Matte charcoal cubie casing
             val baseHalf = cubieSize * 0.495f
             val baseCornersCam = listOf(
                 Vec3(center3D.x - uVec.x * baseHalf - vVec.x * baseHalf, center3D.y - uVec.y * baseHalf - vVec.y * baseHalf, center3D.z - uVec.z * baseHalf - vVec.z * baseHalf),
@@ -169,14 +205,12 @@ fun Cube3DCanvas(
                 StickerPolygon(
                     points2D = baseCornersCam.map { project(it) },
                     avgZ = baseCornersCam.map { it.z }.average().toFloat() - 0.01f,
-                    fillColor = if (isOnHighlightedLayer) Color(0xFF1F2B3E) else Color(0xFF0E131D),
-                    isHighlightedLayer = isOnHighlightedLayer,
-                    isCenter = false
+                    fillColor = Color(0xFF1A1918)
                 )
             )
 
-            // 2. Colored glossy sticker quad (inset slightly for crisp bevel)
-            val stickerHalf = cubieSize * 0.415f
+            // Matte sticker tile
+            val stickerHalf = cubieSize * 0.42f
             val stickerLift = 0.008f
             val stickerCornersCam = listOf(
                 Vec3(center3D.x + normal.x * stickerLift - uVec.x * stickerHalf - vVec.x * stickerHalf, center3D.y + normal.y * stickerLift - uVec.y * stickerHalf - vVec.y * stickerHalf, center3D.z + normal.z * stickerLift - uVec.z * stickerHalf - vVec.z * stickerHalf),
@@ -185,8 +219,7 @@ fun Cube3DCanvas(
                 Vec3(center3D.x + normal.x * stickerLift - uVec.x * stickerHalf + vVec.x * stickerHalf, center3D.y + normal.y * stickerLift - uVec.y * stickerHalf + vVec.y * stickerHalf, center3D.z + normal.z * stickerLift - uVec.z * stickerHalf + vVec.z * stickerHalf)
             ).map { transform3D(it) }
 
-            // Directional lighting shade
-            val lightFactor = (0.78f + 0.22f * ((camNormal.y * 0.5f + camNormal.z * 0.8f).coerceIn(-1f, 1f)))
+            val lightFactor = (0.90f + 0.10f * ((camNormal.y * 0.5f + camNormal.z * 0.8f).coerceIn(-1f, 1f)))
             val shadedColor = Color(
                 red = (color.red * lightFactor).coerceIn(0f, 1f),
                 green = (color.green * lightFactor).coerceIn(0f, 1f),
@@ -198,14 +231,11 @@ fun Cube3DCanvas(
                 StickerPolygon(
                     points2D = stickerCornersCam.map { project(it) },
                     avgZ = stickerCornersCam.map { it.z }.average().toFloat(),
-                    fillColor = shadedColor,
-                    isHighlightedLayer = isOnHighlightedLayer,
-                    isCenter = (s.row == 1 && s.col == 1)
+                    fillColor = shadedColor
                 )
             )
         }
 
-        // Painter's algorithm sort: back-to-front by avgZ
         polygons.sortBy { it.avgZ }
 
         val path = Path()
@@ -219,39 +249,17 @@ fun Cube3DCanvas(
             path.close()
 
             drawPath(path = path, color = poly.fillColor)
-
-            if (poly.isHighlightedLayer) {
-                val glowAlpha = 0.45f + 0.45f * sin(pulsePhase * Math.PI.toFloat() * 2f)
-                drawPath(
-                    path = path,
-                    color = ElectricCyan.copy(alpha = glowAlpha.coerceIn(0.2f, 0.9f)),
-                    style = Stroke(width = 2.6f, join = StrokeJoin.Round)
-                )
-            } else {
-                drawPath(
-                    path = path,
-                    color = Color.Black.copy(alpha = 0.55f),
-                    style = Stroke(width = 1.4f, join = StrokeJoin.Round)
-                )
-            }
-
-            // Center orientation rivet dot
-            if (poly.isCenter) {
-                val cx = pts.map { it.x }.average().toFloat()
-                val cy = pts.map { it.y }.average().toFloat()
-                drawCircle(
-                    color = Color.Black.copy(alpha = 0.28f),
-                    radius = minDim * 0.012f,
-                    center = Offset(cx, cy)
-                )
-            }
+            drawPath(
+                path = path,
+                color = Color(0xFF1A1918),
+                style = Stroke(width = 1.1f, join = StrokeJoin.Round)
+            )
         }
 
-        // Draw 3D Curved Rotation Arrow overlay for highlightedMove
+        // Minimalist black-and-white geometric direction arrow
         if (highlightedMove != null) {
             val f = highlightedMove.face
             val n = Vec3(f.nx.toFloat(), f.ny.toFloat(), f.nz.toFloat())
-            // Orthonormal basis (t1, t2) on the face plane such that t1 x t2 = -n (clockwise looking at face)
             val (t1, t2) = when (f) {
                 CubeFace.F -> Vec3(0f, 1f, 0f) to Vec3(1f, 0f, 0f)
                 CubeFace.B -> Vec3(0f, 1f, 0f) to Vec3(-1f, 0f, 0f)
@@ -263,14 +271,14 @@ fun Cube3DCanvas(
 
             val isCcw = highlightedMove.turnsCw == 3
             val isDouble = highlightedMove.turnsCw == 2
-            val sweepAngle = if (isDouble) Math.PI.toFloat() * 1.35f else Math.PI.toFloat() * 0.85f
+            val sweepAngle = if (isDouble) Math.PI.toFloat() * 1.25f else Math.PI.toFloat() * 0.78f
             val dirSign = if (isCcw) -1f else 1f
-            val arcRadius = 0.72f
+            val arcRadius = 0.68f
             val liftDist = 1.12f
 
             val arcPoints = (0..20).map { step ->
                 val frac = step / 20f
-                val theta = (-0.42f * sweepAngle + frac * sweepAngle) * dirSign
+                val theta = (-0.4f * sweepAngle + frac * sweepAngle) * dirSign
                 val c = cos(theta) * arcRadius
                 val s = sin(theta) * arcRadius
                 val p3d = Vec3(
@@ -281,7 +289,6 @@ fun Cube3DCanvas(
                 project(transform3D(p3d))
             }
 
-            val arrowColor = if (isDouble) NeonOrange else ElectricCyan
             val arcPath = Path().apply {
                 moveTo(arcPoints.first().x, arcPoints.first().y)
                 for (i in 1 until arcPoints.size) {
@@ -289,19 +296,17 @@ fun Cube3DCanvas(
                 }
             }
 
-            // Outer glow stroke
             drawPath(
                 path = arcPath,
-                color = Color.Black.copy(alpha = 0.65f),
-                style = Stroke(width = 11f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                color = Color.White,
+                style = Stroke(width = 7.5f, cap = StrokeCap.Round, join = StrokeJoin.Round)
             )
             drawPath(
                 path = arcPath,
-                color = arrowColor,
-                style = Stroke(width = 6f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                color = Color(0xFF141413),
+                style = Stroke(width = 3.8f, cap = StrokeCap.Round, join = StrokeJoin.Round)
             )
 
-            // Arrowhead at the end of the 3D arc
             val tip = arcPoints.last()
             val prev = arcPoints[arcPoints.size - 3]
             val dx = tip.x - prev.x
@@ -309,8 +314,8 @@ fun Cube3DCanvas(
             val len = sqrt(dx * dx + dy * dy).coerceAtLeast(1f)
             val ux = dx / len
             val uy = dy / len
-            val headLen = minDim * 0.055f
-            val headWidth = minDim * 0.032f
+            val headLen = minDim * 0.045f
+            val headWidth = minDim * 0.026f
 
             val leftWing = Offset(
                 x = tip.x - ux * headLen - uy * headWidth,
@@ -322,12 +327,17 @@ fun Cube3DCanvas(
             )
 
             val headPath = Path().apply {
-                moveTo(tip.x + ux * 4f, tip.y + uy * 4f)
+                moveTo(tip.x + ux * 2.5f, tip.y + uy * 2.5f)
                 lineTo(leftWing.x, leftWing.y)
                 lineTo(rightWing.x, rightWing.y)
                 close()
             }
-            drawPath(path = headPath, color = arrowColor)
+            drawPath(
+                path = headPath,
+                color = Color.White,
+                style = Stroke(width = 3f, join = StrokeJoin.Round)
+            )
+            drawPath(path = headPath, color = Color(0xFF141413))
         }
     }
 }
